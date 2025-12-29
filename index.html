@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSL Manager - 多云平台 SSL 证书自动管理工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a5f;
+            --primary-light: #2d5a87;
+            --accent: #10b981;
+            --accent-hover: #059669;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --bg: #ffffff;
+            --bg-gray: #f9fafb;
+            --border: #e5e7eb;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            background: var(--bg);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero */
+        .hero {
+            padding: 80px 0;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-gray) 0%, var(--bg) 100%);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 32px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Features */
+        .features {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 48px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            padding: 32px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        /* Platforms */
+        .platforms {
+            padding: 80px 0;
+            background: var(--bg-gray);
+        }
+
+        .platforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .platform-card {
+            padding: 32px;
+            background: var(--bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .platform-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .platform-badge {
+            font-size: 1.5rem;
+        }
+
+        .platform-features {
+            list-style: none;
+        }
+
+        .platform-features li {
+            padding: 8px 0;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .check {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .cross {
+            color: #ef4444;
+        }
+
+        /* Quick Start */
+        .quickstart {
+            padding: 80px 0;
+        }
+
+        .quickstart-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .code-block {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            color: #e5e7eb;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 0.9rem;
+            line-height: 1.8;
+        }
+
+        .code-block .comment {
+            color: #6b7280;
+        }
+
+        .code-block .command {
+            color: #10b981;
+        }
+
+        .step {
+            margin-bottom: 32px;
+        }
+
+        .step h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="#" class="logo">
+                <span class="logo-icon">&#128274;</span>
+                SSL Manager
+            </a>
+            <nav class="nav-links">
+                <a href="#features">功能</a>
+                <a href="#platforms">支持平台</a>
+                <a href="#quickstart">快速开始</a>
+                <a href="https://github.com" target="_blank">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>SSL Manager</h1>
+            <p class="subtitle">多云平台 SSL 证书自动管理工具，支持自动申请、DNS 验证、续期和部署</p>
+            <div class="hero-buttons">
+                <a href="#quickstart" class="btn btn-primary">
+                    &#128640; 快速开始
+                </a>
+                <a href="https://github.com" class="btn btn-secondary" target="_blank">
+                    &#11088; GitHub
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">核心功能</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">&#128196;</div>
+                    <h3>自动申请免费证书</h3>
+                    <p>支持从阿里云、腾讯云等平台自动申请免费 DV SSL 证书，无需人工干预</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#127760;</div>
+                    <h3>自动 DNS 验证</h3>
+                    <p>自动添加 DNS TXT 记录完成域名所有权验证，支持跨云平台验证</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128260;</div>
+                    <h3>自动续期管理</h3>
+                    <p>定时检查证书有效期，在即将过期时自动续期，确保服务不中断</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128190;</div>
+                    <h3>守护进程模式</h3>
+                    <p>支持后台持续运行，每 24 小时自动检查证书状态（可配置）</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#128218;</div>
+                    <h3>多域名批量管理</h3>
+                    <p>通过配置文件统一管理多个域名的证书，支持通配符域名</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">&#9881;</div>
+                    <h3>后置命令执行</h3>
+                    <p>证书更新后自动执行自定义命令，如重载 Nginx、同步到其他服务器</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="platforms" id="platforms">
+        <div class="container">
+            <h2 class="section-title">支持平台</h2>
+            <div class="platforms-grid">
+                <div class="platform-card">
+                    <h3>
+                        <span class="platform-badge">&#9729;</span>
+                        阿里云
+                    </h3>
+                    <ul class="platform-features">
+                        <li><span class="check">&#10003;</span> 证书申请（DigiCert 免费 DV）</li>
+                        <li><span class="check">&#10003;</span> DNS 验证（云解析 DNS）</li>
+                        <li><span class="check">&#10003;</span> 证书下载</li>
+                    </ul>
+                </div>
+                <div class="platform-card">
+                    <h3>
+                        <span class="platform-badge">&#9729;</span>
+                        腾讯云
+                    </h3>
+                    <ul class="platform-features">
+                        <li><span class="check">&#10003;</span> 证书申请（TrustAsia 免费 DV）</li>
+                        <li><span class="check">&#10003;</span> DNS 验证（DNSPod）</li>
+                        <li><span class="check">&#10003;</span> 证书下载</li>
+                    </ul>
+                </div>
+                <div class="platform-card">
+                    <h3>
+                        <span class="platform-badge">&#9729;</span>
+                        华为云
+                    </h3>
+                    <ul class="platform-features">
+                        <li><span class="cross">&#10007;</span> 证书申请（API 暂不支持）</li>
+                        <li><span class="check">&#10003;</span> DNS 验证</li>
+                        <li><span class="check">&#10003;</span> 混合模式支持</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="quickstart" id="quickstart">
+        <div class="container">
+            <h2 class="section-title">快速开始</h2>
+            <div class="quickstart-content">
+                <div class="step">
+                    <h3><span class="step-number">1</span> 下载</h3>
+                    <div class="code-block">
+                        <code>
+<span class="comment"># Linux (amd64)</span>
+<span class="command">wget</span> https://github.com/your-repo/ssl-manager/releases/latest/download/ssl-manager-linux-amd64
+<span class="command">chmod</span> +x ssl-manager-linux-amd64
+                        </code>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3><span class="step-number">2</span> 配置</h3>
+                    <div class="code-block">
+                        <code>
+<span class="comment"># config.yaml</span>
+providers:
+  tencent:
+    secret_id: "your-secret-id"
+    secret_key: "your-secret-key"
+
+domains:
+  - name: example.com
+    provider: tencent
+    renew_days: 30
+    post_command: "nginx -s reload"
+                        </code>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3><span class="step-number">3</span> 运行</h3>
+                    <div class="code-block">
+                        <code>
+<span class="comment"># 单次检查和申请</span>
+<span class="command">./ssl-manager</span> config.yaml
+
+<span class="comment"># 启动守护进程</span>
+<span class="command">./ssl-manager</span> config.yaml start
+
+<span class="comment"># 查看状态</span>
+<span class="command">./ssl-manager</span> config.yaml status
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 SSL Manager. 开源项目，基于 MIT 许可证发布。</p>
+            <p style="margin-top: 8px;">
+                <a href="https://github.com">GitHub</a> &middot;
+                <a href="#features">功能介绍</a> &middot;
+                <a href="#quickstart">快速开始</a>
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
