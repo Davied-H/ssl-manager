@@ -4,219 +4,671 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SSL Manager - 多云平台 SSL 证书自动管理工具</title>
+    <meta name="description" content="开源免费的多云平台 SSL 证书自动管理工具，支持阿里云、腾讯云、华为云，自动申请、DNS 验证、续期和部署">
+
+    <!-- 预连接 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+    <!-- 字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- 代码高亮主题 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+
     <style>
-        * {
+        /* ===== CSS Variables ===== */
+        :root {
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --primary-dark: #020617;
+
+            --accent: #10b981;
+            --accent-light: #34d399;
+            --accent-dark: #059669;
+            --accent-glow: rgba(16, 185, 129, 0.4);
+            --cyan: #06b6d4;
+
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --bg-code: #1e293b;
+
+            --border-subtle: rgba(148, 163, 184, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+
+            --gradient-primary: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            --gradient-text: linear-gradient(90deg, #10b981, #06b6d4, #10b981);
+
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== Reset & Base ===== */
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        :root {
-            --primary: #1e3a5f;
-            --primary-light: #2d5a87;
-            --accent: #10b981;
-            --accent-hover: #059669;
-            --text: #1f2937;
-            --text-light: #6b7280;
-            --bg: #ffffff;
-            --bg-gray: #f9fafb;
-            --border: #e5e7eb;
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: var(--text);
+            font-family: var(--font-sans);
+            background: var(--bg-dark);
+            color: var(--text-primary);
             line-height: 1.6;
-            background: var(--bg);
+            overflow-x: hidden;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            background: none;
         }
 
         .container {
+            width: 100%;
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 24px;
         }
 
-        /* Header */
-        header {
-            padding: 16px 0;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            background: var(--bg);
-            z-index: 100;
+        /* ===== Keyframes ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        header .container {
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px var(--accent-glow);
+            }
+            50% {
+                box-shadow: 0 0 40px var(--accent-glow), 0 0 60px rgba(16, 185, 129, 0.2);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-20px) translateX(10px); }
+            50% { transform: translateY(-10px) translateX(-10px); }
+            75% { transform: translateY(-30px) translateX(5px); }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        @keyframes grid-flow {
+            0% { background-position: 0 0; }
+            100% { background-position: 60px 60px; }
+        }
+
+        @keyframes orb-float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* ===== Header ===== */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 16px 0;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: all var(--transition-normal);
+        }
+
+        .header.scrolled {
+            padding: 12px 0;
+            background: rgba(15, 23, 42, 0.95);
+        }
+
+        .header .container {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
         }
 
         .logo-icon {
-            width: 32px;
-            height: 32px;
-            background: var(--accent);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 24px;
-        }
-
-        .nav-links a {
-            color: var(--text-light);
-            text-decoration: none;
-            font-size: 0.95rem;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        /* Hero */
-        .hero {
-            padding: 80px 0;
-            text-align: center;
-            background: linear-gradient(180deg, var(--bg-gray) 0%, var(--bg) 100%);
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            color: var(--primary);
-            margin-bottom: 16px;
-        }
-
-        .hero .subtitle {
-            font-size: 1.25rem;
-            color: var(--text-light);
-            margin-bottom: 32px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s;
-            cursor: pointer;
-            border: none;
-        }
-
-        .btn-primary {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-hover);
-            transform: translateY(-1px);
-        }
-
-        .btn-secondary {
-            background: var(--bg);
-            color: var(--text);
-            border: 1px solid var(--border);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-
-        /* Features */
-        .features {
-            padding: 80px 0;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 48px;
-        }
-
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-        }
-
-        .feature-card {
-            padding: 32px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            transition: all 0.2s;
-        }
-
-        .feature-card:hover {
-            border-color: var(--accent);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .feature-icon {
-            width: 48px;
-            height: 48px;
-            background: rgba(16, 185, 129, 0.1);
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all var(--transition-normal);
+        }
+
+        .logo-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+        }
+
+        .logo:hover .logo-icon {
+            transform: rotate(10deg) scale(1.05);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-links a {
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color var(--transition-fast);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width var(--transition-normal);
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-github {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            transition: all var(--transition-normal);
+        }
+
+        .nav-github:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+        }
+
+        .nav-github svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            padding: 8px;
+        }
+
+        .mobile-menu-btn span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all var(--transition-normal);
+        }
+
+        /* ===== Hero Section ===== */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 0 80px;
+            overflow: hidden;
+        }
+
+        .hero-background {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: grid-flow 20s linear infinite;
+        }
+
+        .hero-orbs {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: orb-float 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, transparent 70%);
+            top: -200px;
+            left: -200px;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            animation-delay: -5s;
+        }
+
+        .particles {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0;
+            animation: float 12s ease-in-out infinite;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--accent);
+            margin-bottom: 24px;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.8s ease-out 0.1s forwards;
+            opacity: 0;
+        }
+
+        .text-gradient {
+            background: var(--gradient-text);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 4s ease infinite;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            animation: fadeInUp 0.8s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+
+        .hero-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 60px;
+            animation: fadeInUp 0.8s ease-out 0.3s forwards;
+            opacity: 0;
+        }
+
+        /* ===== Buttons ===== */
+        .btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            transition: all var(--transition-slow);
+            overflow: hidden;
+        }
+
+        .btn svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .btn .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        /* ===== Terminal ===== */
+        .hero-terminal {
+            max-width: 700px;
+            margin: 0 auto;
+            background: var(--primary-light);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 0.8s ease-out 0.4s forwards;
+            opacity: 0;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ef4444; }
+        .terminal-dot.yellow { background: #eab308; }
+        .terminal-dot.green { background: #22c55e; }
+
+        .terminal-title {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .terminal-body {
+            padding: 20px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            line-height: 1.8;
+            min-height: 120px;
+        }
+
+        .terminal-body .comment {
+            color: var(--text-muted);
+        }
+
+        .terminal-body .command {
+            color: var(--accent);
+        }
+
+        .terminal-body .output {
+            color: var(--text-secondary);
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 18px;
+            background: var(--accent);
+            margin-left: 2px;
+            animation: blink 0.8s step-end infinite;
+            vertical-align: text-bottom;
+        }
+
+        /* ===== Section Styles ===== */
+        .section {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             margin-bottom: 16px;
-            font-size: 1.5rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.75rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== Features ===== */
+        .features {
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--primary-light) 50%, var(--bg-dark) 100%);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            position: relative;
+            padding: 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            transition: all var(--transition-slow);
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--accent), transparent 50%, var(--cyan));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity var(--transition-slow);
+        }
+
+        .feature-card:hover::after {
+            opacity: 1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5), 0 0 30px -10px var(--accent-glow);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 1.75rem;
+            transition: all var(--transition-slow);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1) rotate(5deg);
+            background: var(--gradient-primary);
         }
 
         .feature-card h3 {
-            font-size: 1.125rem;
+            font-size: 1.2rem;
             font-weight: 600;
-            color: var(--text);
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .feature-card p {
-            color: var(--text-light);
+            color: var(--text-secondary);
             font-size: 0.95rem;
+            line-height: 1.7;
         }
 
-        /* Platforms */
-        .platforms {
-            padding: 80px 0;
-            background: var(--bg-gray);
-        }
-
+        /* ===== Platforms ===== */
         .platforms-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -225,23 +677,38 @@
 
         .platform-card {
             padding: 32px;
-            background: var(--bg);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            transition: all var(--transition-slow);
+        }
+
+        .platform-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .platform-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .platform-logo {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
         }
 
         .platform-card h3 {
             font-size: 1.25rem;
             font-weight: 600;
-            color: var(--text);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .platform-badge {
-            font-size: 1.5rem;
         }
 
         .platform-features {
@@ -249,295 +716,1235 @@
         }
 
         .platform-features li {
-            padding: 8px 0;
-            color: var(--text-light);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            padding: 10px 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        .check {
+        .platform-features li:last-child {
+            border-bottom: none;
+        }
+
+        .check-icon {
             color: var(--accent);
             font-weight: bold;
         }
 
-        .cross {
+        .cross-icon {
             color: #ef4444;
         }
 
-        /* Quick Start */
+        /* ===== Quick Start ===== */
         .quickstart {
-            padding: 80px 0;
+            background: var(--primary-light);
         }
 
-        .quickstart-content {
-            max-width: 800px;
-            margin: 0 auto;
+        .quickstart-wrapper {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
         }
 
-        .code-block {
-            background: #1f2937;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
+        /* Tabs */
+        .docs-tabs {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .tab-header {
+            display: flex;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-subtle);
             overflow-x: auto;
+            scrollbar-width: none;
         }
 
-        .code-block code {
-            color: #e5e7eb;
-            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
-            font-size: 0.9rem;
+        .tab-header::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 24px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            white-space: nowrap;
+            position: relative;
+            transition: all var(--transition-normal);
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: transform var(--transition-normal);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+        }
+
+        .tab-btn.active::after {
+            transform: scaleX(1);
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .tab-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .tab-content {
+            padding: 24px;
+        }
+
+        .tab-pane {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Markdown Content */
+        .docs-content {
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+            padding: 40px;
+        }
+
+        .docs-content h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 48px 0 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .docs-content h2:first-child {
+            margin-top: 0;
+        }
+
+        .docs-content h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 32px 0 16px;
+            color: var(--accent);
+        }
+
+        .docs-content h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 24px 0 12px;
+        }
+
+        .docs-content p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
             line-height: 1.8;
         }
 
-        .code-block .comment {
-            color: #6b7280;
-        }
-
-        .code-block .command {
-            color: #10b981;
-        }
-
-        .step {
-            margin-bottom: 32px;
-        }
-
-        .step h3 {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--text);
+        .docs-content ul, .docs-content ol {
+            color: var(--text-secondary);
             margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            padding-left: 24px;
         }
 
-        .step-number {
-            width: 28px;
-            height: 28px;
-            background: var(--primary);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            font-weight: 600;
+        .docs-content li {
+            margin-bottom: 8px;
+            line-height: 1.7;
         }
 
-        /* Footer */
-        footer {
-            padding: 40px 0;
-            border-top: 1px solid var(--border);
-            text-align: center;
+        .docs-content blockquote {
+            margin: 20px 0;
+            padding: 16px 20px;
+            background: rgba(234, 179, 8, 0.1);
+            border-left: 4px solid #eab308;
+            border-radius: 0 8px 8px 0;
         }
 
-        footer p {
-            color: var(--text-light);
+        .docs-content blockquote p {
+            margin: 0;
+            color: #fcd34d;
+        }
+
+        .docs-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
             font-size: 0.9rem;
         }
 
-        footer a {
-            color: var(--primary);
-            text-decoration: none;
+        .docs-content th, .docs-content td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        footer a:hover {
-            text-decoration: underline;
+        .docs-content th {
+            background: rgba(0, 0, 0, 0.2);
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        /* Responsive */
+        .docs-content td {
+            color: var(--text-secondary);
+        }
+
+        .docs-content code {
+            font-family: var(--font-mono);
+            font-size: 0.875em;
+            padding: 2px 6px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            color: var(--accent-light);
+        }
+
+        .docs-content pre {
+            position: relative;
+            margin: 20px 0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .docs-content pre code {
+            display: block;
+            padding: 20px;
+            background: var(--bg-code);
+            overflow-x: auto;
+            font-size: 0.875rem;
+            line-height: 1.7;
+        }
+
+        .code-block-wrapper {
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-family: var(--font-sans);
+            transition: all var(--transition-fast);
+            opacity: 0;
+        }
+
+        .code-block-wrapper:hover .copy-btn {
+            opacity: 1;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+        }
+
+        .copy-btn.copied {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .copy-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* ===== Footer ===== */
+        .footer {
+            padding: 60px 0 30px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 60px;
+            margin-bottom: 40px;
+        }
+
+        .footer-brand p {
+            color: var(--text-secondary);
+            margin-top: 12px;
+            max-width: 300px;
+        }
+
+        .footer-col h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .footer-col a {
+            display: block;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-col a:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            padding-top: 30px;
+            border-top: 1px solid var(--border-subtle);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* ===== Animations ===== */
+        .animate-hidden {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        .animate-visible {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .feature-card:nth-child(1) { transition-delay: 0ms; }
+        .feature-card:nth-child(2) { transition-delay: 100ms; }
+        .feature-card:nth-child(3) { transition-delay: 200ms; }
+        .feature-card:nth-child(4) { transition-delay: 300ms; }
+        .feature-card:nth-child(5) { transition-delay: 400ms; }
+        .feature-card:nth-child(6) { transition-delay: 500ms; }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 1024px) {
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .footer-brand {
+                grid-column: span 2;
+            }
+        }
+
         @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero .subtitle {
-                font-size: 1rem;
-            }
-
-            .section-title {
-                font-size: 1.5rem;
-            }
-
             .nav-links {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 32px;
+                background: var(--bg-dark);
+                transform: translateX(100%);
+                transition: transform var(--transition-normal);
+                z-index: 999;
+            }
+
+            .nav-links.open {
+                transform: translateX(0);
+            }
+
+            .nav-links a::after {
                 display: none;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+                z-index: 1001;
+            }
+
+            .mobile-menu-btn.open span:nth-child(1) {
+                transform: rotate(45deg) translate(5px, 5px);
+            }
+
+            .mobile-menu-btn.open span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .mobile-menu-btn.open span:nth-child(3) {
+                transform: rotate(-45deg) translate(5px, -5px);
+            }
+
+            .hero {
+                padding: 100px 0 60px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-brand {
+                grid-column: span 1;
+            }
+
+            .tab-btn {
+                padding: 14px 16px;
+                font-size: 0.85rem;
+            }
+
+            .docs-content {
+                padding: 24px;
+            }
+        }
+
+        /* ===== Reduced Motion ===== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 <body>
-    <header>
+    <!-- Header -->
+    <header class="header" id="header">
         <div class="container">
             <a href="#" class="logo">
-                <span class="logo-icon">&#128274;</span>
-                SSL Manager
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 1C8.676 1 6 3.676 6 7v2H4v14h16V9h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v2H8V7c0-2.276 1.724-4 4-4zm-1 10.414V17h2v-3.586l1.293 1.293 1.414-1.414L12 9.586l-3.707 3.707 1.414 1.414L11 13.414z"/>
+                    </svg>
+                </div>
+                <span>SSL Manager</span>
             </a>
-            <nav class="nav-links">
+            <nav class="nav-links" id="nav-links">
                 <a href="#features">功能</a>
-                <a href="#platforms">支持平台</a>
+                <a href="#platforms">平台</a>
                 <a href="#quickstart">快速开始</a>
-                <a href="https://github.com" target="_blank">GitHub</a>
+                <a href="https://github.com/Davied-H/ssl-manager" target="_blank" class="nav-github">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </a>
             </nav>
+            <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
         </div>
     </header>
 
+    <!-- Hero Section -->
     <section class="hero">
-        <div class="container">
-            <h1>SSL Manager</h1>
-            <p class="subtitle">多云平台 SSL 证书自动管理工具，支持自动申请、DNS 验证、续期和部署</p>
+        <div class="hero-background">
+            <div class="hero-grid"></div>
+            <div class="hero-orbs">
+                <div class="orb orb-1"></div>
+                <div class="orb orb-2"></div>
+            </div>
+            <div class="particles" id="particles"></div>
+        </div>
+        <div class="container hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                开源免费
+            </div>
+            <h1>
+                <span class="text-gradient">SSL 证书</span><br>
+                自动化管理
+            </h1>
+            <p class="hero-subtitle">
+                多云平台 SSL 证书一站式管理，支持自动申请、DNS 验证、续期和部署
+            </p>
             <div class="hero-buttons">
                 <a href="#quickstart" class="btn btn-primary">
-                    &#128640; 快速开始
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
+                    </svg>
+                    快速开始
                 </a>
-                <a href="https://github.com" class="btn btn-secondary" target="_blank">
-                    &#11088; GitHub
+                <a href="https://github.com/Davied-H/ssl-manager" target="_blank" class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                    Star on GitHub
                 </a>
+            </div>
+            <div class="hero-terminal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">Terminal</span>
+                </div>
+                <div class="terminal-body" id="terminal-body">
+                    <span class="typing-cursor"></span>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="features" id="features">
+    <!-- Features Section -->
+    <section class="section features" id="features">
         <div class="container">
-            <h2 class="section-title">核心功能</h2>
+            <div class="section-header">
+                <span class="section-badge">核心功能</span>
+                <h2 class="section-title">为什么选择 SSL Manager？</h2>
+                <p class="section-desc">简化 SSL 证书管理流程，让您专注于业务开发</p>
+            </div>
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll">
                     <div class="feature-icon">&#128196;</div>
                     <h3>自动申请免费证书</h3>
-                    <p>支持从阿里云、腾讯云等平台自动申请免费 DV SSL 证书，无需人工干预</p>
+                    <p>支持从阿里云、腾讯云等平台自动申请免费 DV SSL 证书，无需人工干预，全程自动化处理</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll">
                     <div class="feature-icon">&#127760;</div>
                     <h3>自动 DNS 验证</h3>
-                    <p>自动添加 DNS TXT 记录完成域名所有权验证，支持跨云平台验证</p>
+                    <p>自动添加 DNS TXT 记录完成域名所有权验证，支持跨云平台验证，灵活配置</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll">
                     <div class="feature-icon">&#128260;</div>
                     <h3>自动续期管理</h3>
-                    <p>定时检查证书有效期，在即将过期时自动续期，确保服务不中断</p>
+                    <p>定时检查证书有效期，在即将过期时自动续期，确保服务不中断，告别证书过期烦恼</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll">
                     <div class="feature-icon">&#128190;</div>
                     <h3>守护进程模式</h3>
-                    <p>支持后台持续运行，每 24 小时自动检查证书状态（可配置）</p>
+                    <p>支持后台持续运行，每 24 小时自动检查证书状态（间隔可配置），省心省力</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll">
                     <div class="feature-icon">&#128218;</div>
                     <h3>多域名批量管理</h3>
-                    <p>通过配置文件统一管理多个域名的证书，支持通配符域名</p>
+                    <p>通过配置文件统一管理多个域名的证书，支持通配符域名，一次配置永久生效</p>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card animate-on-scroll">
                     <div class="feature-icon">&#9881;</div>
                     <h3>后置命令执行</h3>
-                    <p>证书更新后自动执行自定义命令，如重载 Nginx、同步到其他服务器</p>
+                    <p>证书更新后自动执行自定义命令，如重载 Nginx、同步到其他服务器、发送通知等</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="platforms" id="platforms">
+    <!-- Platforms Section -->
+    <section class="section platforms" id="platforms">
         <div class="container">
-            <h2 class="section-title">支持平台</h2>
+            <div class="section-header">
+                <span class="section-badge">多云支持</span>
+                <h2 class="section-title">支持主流云平台</h2>
+                <p class="section-desc">一套工具，管理所有云平台的 SSL 证书</p>
+            </div>
             <div class="platforms-grid">
-                <div class="platform-card">
-                    <h3>
-                        <span class="platform-badge">&#9729;</span>
-                        阿里云
-                    </h3>
+                <div class="platform-card animate-on-scroll">
+                    <div class="platform-header">
+                        <div class="platform-logo">&#9729;</div>
+                        <h3>阿里云</h3>
+                    </div>
                     <ul class="platform-features">
-                        <li><span class="check">&#10003;</span> 证书申请（DigiCert 免费 DV）</li>
-                        <li><span class="check">&#10003;</span> DNS 验证（云解析 DNS）</li>
-                        <li><span class="check">&#10003;</span> 证书下载</li>
+                        <li><span class="check-icon">&#10003;</span> 证书申请（DigiCert 免费 DV）</li>
+                        <li><span class="check-icon">&#10003;</span> DNS 验证（云解析 DNS）</li>
+                        <li><span class="check-icon">&#10003;</span> 证书下载与部署</li>
                     </ul>
                 </div>
-                <div class="platform-card">
-                    <h3>
-                        <span class="platform-badge">&#9729;</span>
-                        腾讯云
-                    </h3>
+                <div class="platform-card animate-on-scroll">
+                    <div class="platform-header">
+                        <div class="platform-logo">&#9729;</div>
+                        <h3>腾讯云</h3>
+                    </div>
                     <ul class="platform-features">
-                        <li><span class="check">&#10003;</span> 证书申请（TrustAsia 免费 DV）</li>
-                        <li><span class="check">&#10003;</span> DNS 验证（DNSPod）</li>
-                        <li><span class="check">&#10003;</span> 证书下载</li>
+                        <li><span class="check-icon">&#10003;</span> 证书申请（TrustAsia 免费 DV）</li>
+                        <li><span class="check-icon">&#10003;</span> DNS 验证（DNSPod）</li>
+                        <li><span class="check-icon">&#10003;</span> 证书下载与部署</li>
                     </ul>
                 </div>
-                <div class="platform-card">
-                    <h3>
-                        <span class="platform-badge">&#9729;</span>
-                        华为云
-                    </h3>
+                <div class="platform-card animate-on-scroll">
+                    <div class="platform-header">
+                        <div class="platform-logo">&#9729;</div>
+                        <h3>华为云</h3>
+                    </div>
                     <ul class="platform-features">
-                        <li><span class="cross">&#10007;</span> 证书申请（API 暂不支持）</li>
-                        <li><span class="check">&#10003;</span> DNS 验证</li>
-                        <li><span class="check">&#10003;</span> 混合模式支持</li>
+                        <li><span class="cross-icon">&#10007;</span> 证书申请（API 暂不支持）</li>
+                        <li><span class="check-icon">&#10003;</span> DNS 验证</li>
+                        <li><span class="check-icon">&#10003;</span> 混合模式支持</li>
                     </ul>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="quickstart" id="quickstart">
+    <!-- Quick Start Section -->
+    <section class="section quickstart" id="quickstart">
         <div class="container">
-            <h2 class="section-title">快速开始</h2>
-            <div class="quickstart-content">
-                <div class="step">
-                    <h3><span class="step-number">1</span> 下载</h3>
-                    <div class="code-block">
-                        <code>
-<span class="comment"># Linux (amd64)</span>
-<span class="command">wget</span> https://github.com/your-repo/ssl-manager/releases/latest/download/ssl-manager-linux-amd64
-<span class="command">chmod</span> +x ssl-manager-linux-amd64
-                        </code>
+            <div class="section-header">
+                <span class="section-badge">快速上手</span>
+                <h2 class="section-title">5 分钟开始使用</h2>
+                <p class="section-desc">简单几步，即可开始自动化管理您的 SSL 证书</p>
+            </div>
+            <div class="quickstart-wrapper">
+                <!-- Install Tabs -->
+                <div class="docs-tabs animate-on-scroll">
+                    <div class="tab-header">
+                        <button class="tab-btn active" data-tab="linux">
+                            <svg viewBox="0 0 24 24"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.132 1.884 1.071.771-.06 1.592-.536 2.257-1.306.631-.765 1.683-1.084 2.378-1.503.348-.199.629-.469.649-.853.023-.4-.2-.811-.714-1.376v-.097l-.003-.003c-.17-.2-.25-.535-.338-.926-.085-.401-.182-.786-.492-1.046h-.003c-.059-.054-.123-.067-.188-.135a.357.357 0 00-.19-.064c.431-1.278.264-2.55-.173-3.694-.533-1.41-1.465-2.638-2.175-3.483-.796-1.005-1.576-1.957-1.56-3.368.026-2.152.236-6.133-3.544-6.139zm.529 3.405h.013c.213 0 .396.062.584.198.19.135.33.332.438.533.105.259.158.459.166.724 0-.02.006-.04.006-.06v.105a.086.086 0 01-.004-.021l-.004-.024a1.807 1.807 0 01-.15.706.953.953 0 01-.213.335.71.71 0 00-.088-.042c-.104-.045-.198-.064-.284-.133a1.312 1.312 0 00-.22-.066c.05-.06.146-.133.183-.198.053-.128.082-.264.088-.402v-.02a1.21 1.21 0 00-.061-.4c-.045-.134-.101-.2-.183-.333-.084-.066-.167-.132-.267-.132h-.016c-.093 0-.176.03-.262.132a.8.8 0 00-.205.334 1.18 1.18 0 00-.09.4v.019c.002.089.008.179.02.267-.193-.067-.438-.135-.607-.202a1.635 1.635 0 01-.018-.2v-.02a1.772 1.772 0 01.15-.768c.082-.22.232-.406.43-.533a.985.985 0 01.594-.2zm-2.962.059h.036c.142 0 .27.048.399.135.146.129.264.288.344.465.09.199.14.4.153.667v.004c.007.134.006.2-.002.266v.08c-.03.007-.056.018-.083.024-.152.055-.274.135-.393.2.012-.09.013-.18.003-.267v-.015c-.012-.133-.04-.2-.082-.333a.613.613 0 00-.166-.267.248.248 0 00-.183-.064h-.021c-.071.006-.13.04-.186.132a.552.552 0 00-.12.27.944.944 0 00-.023.33v.015c.012.135.037.2.08.334.046.134.098.2.166.268.01.009.02.018.034.024-.07.057-.117.07-.176.136a.304.304 0 01-.131.068 2.62 2.62 0 01-.275-.402 1.772 1.772 0 01-.155-.667 1.759 1.759 0 01.08-.668 1.43 1.43 0 01.283-.535c.128-.133.26-.2.418-.2zm1.37 1.706c.332 0 .733.065 1.216.399.293.2.523.269 1.052.468h.003c.255.136.405.266.478.399v-.131a.571.571 0 01.016.47c-.123.31-.516.643-1.063.842v.002c-.268.135-.501.333-.775.465-.276.135-.588.292-1.012.267a1.139 1.139 0 01-.448-.067 3.566 3.566 0 01-.322-.198c-.195-.135-.363-.332-.612-.465v-.005h-.005c-.4-.246-.616-.512-.686-.71-.07-.268-.005-.47.193-.6.224-.135.38-.271.483-.336.104-.074.143-.102.176-.131h.002v-.003c.169-.202.436-.47.839-.601.139-.036.294-.065.466-.065zm2.8 2.142c.358 1.417 1.196 3.475 1.735 4.473.286.534.855 1.659 1.102 3.024.156-.005.33.018.513.064.646-1.671-.546-3.467-1.089-3.966-.22-.2-.232-.335-.123-.335.59.534 1.365 1.572 1.646 2.757.13.535.16 1.104.021 1.67.067.028.135.06.205.067 1.032.534 1.413.938 1.23 1.537v-.002c-.06-.135-.12-.2-.2-.334-.08-.066-.16-.135-.24-.202h-.003c-.028-.024-.06-.052-.085-.076-.079-.067-.086-.079-.158-.135-.067-.053-.093-.058-.2-.133l-.003-.003c-.003-.003-.028-.006-.052-.006-.227.067-.376.202-.465.4-.089.197-.092.333-.089.532v.003c-.036.068-.046.135-.076.202-.033.069-.064.135-.1.268v.003c-.02.068-.045.135-.06.2-.01.068-.016.135-.025.203v.001c-.019.132-.018.2.005.267.016.067.038.133.067.197.045.133.106.2.179.337.01.067.02.132.03.197v.003c.003.074.004.135-.003.202-.012.081-.024.133-.04.2-.025.133-.064.267-.136.468-.015.067-.048.133-.06.2-.008.02-.016.053-.028.068-.095.267-.073.333.192.334.117-.005.232-.035.366-.135.217-.136.477-.4.773-.869.075-.134.144-.267.206-.4.063-.134.12-.267.17-.401.096-.27.166-.536.2-.802.03-.27.048-.47.038-.735-.013-.2-.024-.4-.063-.6-.022-.135-.048-.267-.09-.4-.04-.135-.083-.267-.137-.4-.054-.135-.114-.266-.18-.399-.093-.2-.19-.398-.304-.597-.013-.066-.028-.133-.044-.2v-.003l-.018-.032-.026-.063-.04-.135-.006-.02-.01-.013-.003-.013-.003-.003a3.85 3.85 0 01-.2-.4c-.1-.267-.172-.533-.207-.8a2.396 2.396 0 01.015-.667c.024-.2.063-.332.114-.535.058-.132.122-.267.2-.4l.003-.003c.077-.132.168-.266.267-.399.098-.135.207-.267.324-.4.058-.067.116-.133.18-.2.063-.067.13-.133.2-.2l.003-.003c.074-.067.146-.133.225-.198.079-.067.162-.135.249-.202.088-.066.178-.133.271-.2.093-.066.19-.132.292-.198.196-.135.402-.268.618-.4.108-.067.22-.133.335-.2.114-.066.23-.132.35-.198.24-.132.485-.264.736-.4.249-.132.503-.266.762-.399l.003-.003c.11-.066.217-.133.33-.2.11-.066.22-.135.333-.2.22-.134.445-.267.676-.4.23-.133.462-.264.697-.4.235-.132.473-.266.715-.399.487-.267.98-.533 1.476-.799.497-.267.998-.534 1.497-.8.498-.268.998-.534 1.498-.8.499-.268 1-.533 1.498-.8l.003-.002c.46-.24.46-.24.46-.8h-.003c-.995.535-1.99 1.067-2.988 1.6-.998.535-1.999 1.066-3 1.6-1.003.534-2.005 1.067-3.01 1.6-1.007.534-2.009 1.068-3.015 1.601a121.286 121.286 0 01-1.228.667z"/></svg>
+                            Linux
+                        </button>
+                        <button class="tab-btn" data-tab="macos">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+                            macOS
+                        </button>
+                        <button class="tab-btn" data-tab="windows">
+                            <svg viewBox="0 0 24 24"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
+                            Windows
+                        </button>
+                        <button class="tab-btn" data-tab="docker">
+                            <svg viewBox="0 0 24 24"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/></svg>
+                            Docker
+                        </button>
+                        <button class="tab-btn" data-tab="source">
+                            <svg viewBox="0 0 24 24"><path d="M12 0L1.75 6v12L12 24l10.25-6V6zm0 2.17l8.25 4.83v9.666L12 21.17l-8.25-4.504V7z"/></svg>
+                            源码构建
+                        </button>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" data-tab="linux" id="docs-content"></div>
+                        <div class="tab-pane" data-tab="macos"></div>
+                        <div class="tab-pane" data-tab="windows"></div>
+                        <div class="tab-pane" data-tab="docker"></div>
+                        <div class="tab-pane" data-tab="source"></div>
                     </div>
                 </div>
 
-                <div class="step">
-                    <h3><span class="step-number">2</span> 配置</h3>
-                    <div class="code-block">
-                        <code>
-<span class="comment"># config.yaml</span>
-providers:
-  tencent:
-    secret_id: "your-secret-id"
-    secret_key: "your-secret-key"
-
-domains:
-  - name: example.com
-    provider: tencent
-    renew_days: 30
-    post_command: "nginx -s reload"
-                        </code>
-                    </div>
-                </div>
-
-                <div class="step">
-                    <h3><span class="step-number">3</span> 运行</h3>
-                    <div class="code-block">
-                        <code>
-<span class="comment"># 单次检查和申请</span>
-<span class="command">./ssl-manager</span> config.yaml
-
-<span class="comment"># 启动守护进程</span>
-<span class="command">./ssl-manager</span> config.yaml start
-
-<span class="comment"># 查看状态</span>
-<span class="command">./ssl-manager</span> config.yaml status
-                        </code>
-                    </div>
-                </div>
+                <!-- Full Documentation -->
+                <div class="docs-content animate-on-scroll" id="full-docs"></div>
             </div>
         </div>
     </section>
 
-    <footer>
+    <!-- Footer -->
+    <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 SSL Manager. 开源项目，基于 MIT 许可证发布。</p>
-            <p style="margin-top: 8px;">
-                <a href="https://github.com">GitHub</a> &middot;
-                <a href="#features">功能介绍</a> &middot;
-                <a href="#quickstart">快速开始</a>
-            </p>
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="#" class="logo">
+                        <div class="logo-icon">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 1C8.676 1 6 3.676 6 7v2H4v14h16V9h-2V7c0-3.324-2.676-6-6-6zm0 2c2.276 0 4 1.724 4 4v2H8V7c0-2.276 1.724-4 4-4zm-1 10.414V17h2v-3.586l1.293 1.293 1.414-1.414L12 9.586l-3.707 3.707 1.414 1.414L11 13.414z"/>
+                            </svg>
+                        </div>
+                        <span>SSL Manager</span>
+                    </a>
+                    <p>开源免费的多云平台 SSL 证书自动管理工具，让证书管理变得简单。</p>
+                </div>
+                <div class="footer-col">
+                    <h4>资源</h4>
+                    <a href="#quickstart">快速开始</a>
+                    <a href="https://github.com/Davied-H/ssl-manager" target="_blank">GitHub</a>
+                    <a href="https://github.com/Davied-H/ssl-manager/releases" target="_blank">下载</a>
+                </div>
+                <div class="footer-col">
+                    <h4>社区</h4>
+                    <a href="https://github.com/Davied-H/ssl-manager/issues" target="_blank">Issues</a>
+                    <a href="https://github.com/Davied-H/ssl-manager/discussions" target="_blank">Discussions</a>
+                    <a href="https://github.com/Davied-H/ssl-manager/blob/main/LICENSE" target="_blank">MIT License</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 SSL Manager. 基于 MIT 许可证开源发布。</p>
+            </div>
         </div>
     </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    <script>
+        // ===== Markdown Content =====
+        const tabContents = {
+            linux: `
+### Linux 安装
+
+下载适合您架构的预编译版本：
+
+\`\`\`bash
+# x86_64 (amd64)
+wget https://github.com/Davied-H/ssl-manager/releases/latest/download/ssl-manager-linux-amd64
+chmod +x ssl-manager-linux-amd64
+sudo mv ssl-manager-linux-amd64 /usr/local/bin/ssl-manager
+
+# ARM64
+wget https://github.com/Davied-H/ssl-manager/releases/latest/download/ssl-manager-linux-arm64
+chmod +x ssl-manager-linux-arm64
+sudo mv ssl-manager-linux-arm64 /usr/local/bin/ssl-manager
+
+# 验证安装
+ssl-manager -h
+\`\`\`
+
+支持的架构：amd64、arm64、arm、386、mips、mipsle、riscv64、loong64
+`,
+            macos: `
+### macOS 安装
+
+\`\`\`bash
+# Intel Mac (amd64)
+wget https://github.com/Davied-H/ssl-manager/releases/latest/download/ssl-manager-darwin-amd64
+chmod +x ssl-manager-darwin-amd64
+sudo mv ssl-manager-darwin-amd64 /usr/local/bin/ssl-manager
+
+# Apple Silicon (arm64)
+wget https://github.com/Davied-H/ssl-manager/releases/latest/download/ssl-manager-darwin-arm64
+chmod +x ssl-manager-darwin-arm64
+sudo mv ssl-manager-darwin-arm64 /usr/local/bin/ssl-manager
+
+# 验证安装
+ssl-manager -h
+\`\`\`
+
+> **提示**：首次运行可能需要在"系统偏好设置 > 安全性与隐私"中允许运行。
+`,
+            windows: `
+### Windows 安装
+
+1. 从 [Releases](https://github.com/Davied-H/ssl-manager/releases) 页面下载对应版本：
+   - 64 位系统：\`ssl-manager-windows-amd64.exe\`
+   - ARM64 系统：\`ssl-manager-windows-arm64.exe\`
+   - 32 位系统：\`ssl-manager-windows-386.exe\`
+
+2. 将下载的文件重命名为 \`ssl-manager.exe\`
+
+3. 将文件所在目录添加到系统 PATH 环境变量
+
+4. 打开命令提示符或 PowerShell，验证安装：
+
+\`\`\`powershell
+ssl-manager.exe -h
+\`\`\`
+`,
+            docker: `
+### Docker 部署
+
+#### 单次执行模式
+
+\`\`\`bash
+docker run -v $(pwd)/config.yaml:/app/config.yaml \\
+           -v $(pwd)/certs:/app/certs \\
+           Davied-H/ssl-manager
+\`\`\`
+
+#### 守护进程模式
+
+\`\`\`bash
+docker run -d \\
+           -e SSL_MANAGER_MODE=daemon \\
+           -v $(pwd)/config.yaml:/app/config.yaml \\
+           -v $(pwd)/certs:/app/certs \\
+           --name ssl-manager \\
+           --restart unless-stopped \\
+           Davied-H/ssl-manager
+\`\`\`
+
+#### Docker Compose（推荐）
+
+\`\`\`yaml
+version: '3'
+services:
+  ssl-manager:
+    image: Davied-H/ssl-manager
+    environment:
+      - SSL_MANAGER_MODE=daemon
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./certs:/app/certs
+    restart: unless-stopped
+\`\`\`
+`,
+            source: `
+### 从源码构建
+
+需要 Go 1.21 或更高版本。
+
+\`\`\`bash
+# 克隆项目
+git clone https://github.com/Davied-H/ssl-manager.git
+cd ssl-manager
+
+# 快速构建（当前平台）
+go build -o ssl-manager ./cmd/ssl-manager
+
+# 或使用构建脚本
+./build.sh
+
+# 只构建当前平台（最快）
+./build.sh -c
+
+# 构建指定平台
+./build.sh -p linux/amd64
+
+# 构建多个平台
+./build.sh -p linux/amd64 -p linux/arm64 -p darwin/arm64
+
+# 查看所有支持的平台
+./build.sh -l
+\`\`\`
+
+构建产物位于 \`dist/\` 目录。
+`
+        };
+
+        const fullDocsContent = `
+## 前置条件
+
+### 系统要求
+
+- 操作系统：Linux、macOS 或 Windows
+- 网络：能够访问云平台 API
+- 权限：有权限管理域名 DNS 和 SSL 证书
+
+### 云平台准备
+
+#### 阿里云
+
+1. 域名已托管在阿里云 DNS
+2. 拥有阿里云 AccessKey（需要 SSL 证书服务和 DNS 服务权限）
+3. 阿里云账户有可用的免费证书额度
+
+#### 腾讯云
+
+1. 域名已托管在 DNSPod
+2. 拥有腾讯云 SecretId/SecretKey（需要 SSL 证书服务和 DNSPod 服务权限）
+3. 腾讯云账户有可用的免费证书额度
+
+#### 华为云
+
+> ⚠️ 华为云不支持通过 API 申请免费证书，需在控制台手动申请后使用本工具管理
+
+1. 域名已托管在华为云 DNS
+2. 拥有华为云 AccessKey（需要 DNS 服务权限）
+
+---
+
+## 配置详解
+
+创建配置文件 \`config.yaml\`：
+
+\`\`\`yaml
+# 云平台凭证配置
+providers:
+  # 阿里云配置
+  aliyun:
+    access_key_id: "your_access_key_id"
+    access_key_secret: "your_access_key_secret"
+    region: "cn-hangzhou"
+
+  # 腾讯云配置
+  tencent:
+    secret_id: "your_secret_id"
+    secret_key: "your_secret_key"
+    region: "ap-guangzhou"
+
+  # 华为云配置（可选）
+  # huawei:
+  #   access_key: "your_access_key"
+  #   secret_key: "your_secret_key"
+  #   region: "cn-east-2"
+  #   project_id: "your_project_id"
+
+# 域名配置
+domains:
+  # 简单模式：证书和 DNS 使用同一平台
+  - domain: "example.com"
+    provider: "aliyun"
+    renew_days: 7
+    post_command: "nginx -s reload"
+
+  - domain: "www.example.com"
+    provider: "tencent"
+    renew_days: 7
+
+  # 混合模式：证书和 DNS 使用不同平台
+  # - domain: "api.example.com"
+  #   cert_provider: "tencent"
+  #   dns_provider: "aliyun"
+  #   renew_days: 7
+
+# 证书保存目录
+output_dir: "./certs"
+
+# 检查间隔（小时），守护进程模式使用
+check_interval: 24
+
+# 全局后置命令（可选）
+# 支持变量: \${DOMAIN}, \${CERT_DIR}, \${CERT_FILE}, \${KEY_FILE}, \${FULLCHAIN_FILE}
+# post_command: "systemctl reload nginx"
+\`\`\`
+
+### 配置选项说明
+
+| 选项 | 说明 | 默认值 |
+|-----|------|-------|
+| \`renew_days\` | 证书到期前多少天开始续期 | 7 |
+| \`output_dir\` | 证书保存目录 | ./certs |
+| \`check_interval\` | 守护进程检查间隔（小时） | 24 |
+| \`post_command\` | 证书更新后执行的命令 | - |
+
+---
+
+## 使用方法
+
+### 单次检查并申请证书
+
+\`\`\`bash
+./ssl-manager config.yaml
+\`\`\`
+
+### 守护进程管理
+
+\`\`\`bash
+# 启动后台守护进程
+./ssl-manager config.yaml start
+
+# 查看运行状态
+./ssl-manager config.yaml status
+
+# 停止守护进程
+./ssl-manager config.yaml stop
+
+# 重启守护进程
+./ssl-manager config.yaml restart
+\`\`\`
+
+### 前台守护进程模式（用于调试）
+
+\`\`\`bash
+./ssl-manager config.yaml daemon
+\`\`\`
+
+### 继续处理已有订单
+
+如果之前的申请中断，可以继续处理：
+
+\`\`\`bash
+./ssl-manager config.yaml continue <订单ID> <域名> [提供商]
+
+# 示例
+./ssl-manager config.yaml continue 123456789 example.com aliyun
+./ssl-manager config.yaml continue abcd1234 example.com tencent
+\`\`\`
+
+---
+
+## 证书文件
+
+证书下载后保存在 \`output_dir/<域名>/\` 目录下：
+
+- \`cert.pem\` - 证书文件
+- \`key.pem\` - 私钥文件
+- \`fullchain.pem\` - 完整证书链
+
+---
+
+## 部署示例
+
+### Nginx 配置
+
+\`\`\`nginx
+server {
+    listen 443 ssl http2;
+    server_name example.com;
+
+    ssl_certificate /path/to/certs/example.com/fullchain.pem;
+    ssl_certificate_key /path/to/certs/example.com/key.pem;
+
+    # 推荐的 SSL 配置
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256;
+
+    # 其他配置...
+}
+\`\`\`
+
+### Cron 定时任务
+
+使用 crontab 每天自动检查：
+
+\`\`\`bash
+# 编辑 crontab
+crontab -e
+
+# 添加以下内容（每天凌晨 3 点检查）
+0 3 * * * /usr/local/bin/ssl-manager /etc/ssl-manager/config.yaml >> /var/log/ssl-manager.log 2>&1
+\`\`\`
+
+---
+
+## 注意事项
+
+- 阿里云和腾讯云免费证书每年有申请数量限制
+- 华为云不支持通过 API 申请免费证书，仅可管理已有证书
+- DNS 验证记录会自动添加和更新，验证完成后请手动清理
+- 建议设置 \`renew_days\` 为 7-14 天，预留足够的续期时间
+- \`config.yaml\` 包含敏感的 AccessKey 信息，请妥善保管（建议设置 600 权限）
+`;
+
+        // ===== Initialize Marked =====
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        // ===== Render Markdown =====
+        function renderMarkdown() {
+            // Render tab contents
+            Object.keys(tabContents).forEach(tab => {
+                const pane = document.querySelector(`.tab-pane[data-tab="${tab}"]`);
+                if (pane) {
+                    pane.innerHTML = marked.parse(tabContents[tab]);
+                }
+            });
+
+            // Render full docs
+            const fullDocs = document.getElementById('full-docs');
+            if (fullDocs) {
+                fullDocs.innerHTML = marked.parse(fullDocsContent);
+            }
+
+            // Add copy buttons
+            addCopyButtons();
+        }
+
+        // ===== Copy Buttons =====
+        function addCopyButtons() {
+            document.querySelectorAll('pre').forEach(pre => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+
+                const btn = document.createElement('button');
+                btn.className = 'copy-btn';
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copy';
+                btn.onclick = () => copyCode(pre.querySelector('code'), btn);
+                wrapper.appendChild(btn);
+            });
+        }
+
+        function copyCode(codeBlock, btn) {
+            navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+                btn.classList.add('copied');
+                btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Copied!';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copy';
+                }, 2000);
+            });
+        }
+
+        // ===== Tab Switcher =====
+        function initTabs() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tab = btn.dataset.tab;
+
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabPanes.forEach(p => p.classList.remove('active'));
+
+                    btn.classList.add('active');
+                    document.querySelector(`.tab-pane[data-tab="${tab}"]`).classList.add('active');
+                });
+            });
+        }
+
+        // ===== Scroll Animations =====
+        function initScrollAnimations() {
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('animate-visible');
+                            entry.target.classList.remove('animate-hidden');
+                        }
+                    });
+                },
+                { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+            );
+
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                el.classList.add('animate-hidden');
+                observer.observe(el);
+            });
+        }
+
+        // ===== Header Scroll =====
+        function initHeaderScroll() {
+            const header = document.getElementById('header');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            });
+        }
+
+        // ===== Mobile Menu =====
+        function initMobileMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const nav = document.getElementById('nav-links');
+
+            btn.addEventListener('click', () => {
+                btn.classList.toggle('open');
+                nav.classList.toggle('open');
+            });
+
+            nav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    btn.classList.remove('open');
+                    nav.classList.remove('open');
+                });
+            });
+        }
+
+        // ===== Particles =====
+        function initParticles() {
+            const container = document.getElementById('particles');
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                particle.style.opacity = 0.1 + Math.random() * 0.3;
+                particle.style.width = (2 + Math.random() * 4) + 'px';
+                particle.style.height = particle.style.width;
+                container.appendChild(particle);
+            }
+        }
+
+        // ===== Terminal Typewriter =====
+        function initTypewriter() {
+            const terminal = document.getElementById('terminal-body');
+            const lines = [
+                { type: 'comment', text: '# 下载并安装' },
+                { type: 'command', text: '$ wget https://github.com/.../ssl-manager-linux-amd64' },
+                { type: 'command', text: '$ chmod +x ssl-manager-linux-amd64' },
+                { type: 'comment', text: '# 启动守护进程' },
+                { type: 'command', text: '$ ./ssl-manager config.yaml start' },
+                { type: 'output', text: '✓ SSL Manager 守护进程已启动' },
+                { type: 'output', text: '✓ 正在检查证书状态...' },
+                { type: 'output', text: '✓ example.com 证书有效，剩余 45 天' }
+            ];
+
+            let lineIndex = 0;
+            let charIndex = 0;
+            let currentHtml = '';
+
+            function type() {
+                if (lineIndex >= lines.length) {
+                    terminal.innerHTML = currentHtml;
+                    return;
+                }
+
+                const line = lines[lineIndex];
+                const text = line.text;
+
+                if (charIndex < text.length) {
+                    charIndex++;
+                    const displayText = text.substring(0, charIndex);
+                    terminal.innerHTML = currentHtml +
+                        `<span class="${line.type}">${displayText}</span><span class="typing-cursor"></span>`;
+                    setTimeout(type, 30 + Math.random() * 20);
+                } else {
+                    currentHtml += `<span class="${line.type}">${text}</span><br>`;
+                    lineIndex++;
+                    charIndex = 0;
+                    setTimeout(type, 300);
+                }
+            }
+
+            setTimeout(type, 1000);
+        }
+
+        // ===== Button Ripple =====
+        function initRipple() {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    const ripple = document.createElement('span');
+                    ripple.className = 'ripple';
+                    ripple.style.left = (e.clientX - rect.left) + 'px';
+                    ripple.style.top = (e.clientY - rect.top) + 'px';
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+        }
+
+        // ===== Initialize =====
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMarkdown();
+            initTabs();
+            initScrollAnimations();
+            initHeaderScroll();
+            initMobileMenu();
+            initParticles();
+            initTypewriter();
+            initRipple();
+        });
+    </script>
 </body>
 </html>
