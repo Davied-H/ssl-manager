@@ -1469,7 +1469,7 @@ ssl-manager.exe -h
 \`\`\`bash
 docker run -v $(pwd)/config.yaml:/app/config.yaml \\
            -v $(pwd)/certs:/app/certs \\
-           Davied-H/ssl-manager
+           dongdonghe122/ssl-manager
 \`\`\`
 
 #### 守护进程模式
@@ -1481,7 +1481,7 @@ docker run -d \\
            -v $(pwd)/certs:/app/certs \\
            --name ssl-manager \\
            --restart unless-stopped \\
-           Davied-H/ssl-manager
+           dongdonghe122/ssl-manager
 \`\`\`
 
 #### Docker Compose（推荐）
@@ -1490,7 +1490,7 @@ docker run -d \\
 version: '3'
 services:
   ssl-manager:
-    image: Davied-H/ssl-manager
+    image: dongdonghe122/ssl-manager
     environment:
       - SSL_MANAGER_MODE=daemon
       - TZ=Asia/Shanghai
