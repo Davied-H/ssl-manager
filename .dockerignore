@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Claude
+.claude
+
+# 文档
+*.md
+LICENSE
+
+# 编译产物
+dist/
+ssl-manager
+
+# 运行时文件（不应打包进镜像）
+certs/
+config.yaml
+*.log
+*.pid
+
+# 测试
+*_test.go

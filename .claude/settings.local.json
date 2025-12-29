@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(./build.sh)",
+      "WebSearch",
+      "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(go build:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(./ssl-manager:*)",
+      "Bash(ls:*)",
+      "Bash(./build.sh:*)",
+      "Bash(./dist/aliyun-ssl-manager-darwin-arm64:*)",
+      "Bash(wc:*)",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}

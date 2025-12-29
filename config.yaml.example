@@ -1,0 +1,78 @@
+# ============================================
+# 云平台凭证配置 (按需配置，支持多云混用)
+# ============================================
+
+providers:
+  # 阿里云配置
+  aliyun:
+    access_key_id: "your_access_key_id"
+    access_key_secret: "your_access_key_secret"
+    region: "cn-hangzhou"
+
+  # 腾讯云配置 (使用 DNSPod 进行 DNS 验证)
+  tencent:
+    secret_id: "your_secret_id"
+    secret_key: "your_secret_key"
+    region: "ap-guangzhou"
+
+  # 华为云配置
+  # huawei:
+  #   access_key: "your_access_key"
+  #   secret_key: "your_secret_key"
+  #   region: "cn-east-2"
+  #   project_id: "your_project_id"
+
+# ============================================
+# 域名配置
+# ============================================
+
+domains:
+  # 示例1: 使用阿里云管理证书和DNS
+  - domain: "example.com"
+    provider: "aliyun"
+    renew_days: 7
+    # post_command: "nginx -s reload"
+
+  # 示例2: 使用腾讯云管理证书和DNS
+  - domain: "www.example.com"
+    provider: "tencent"
+    renew_days: 7
+
+  # 示例3: 混合模式 - 腾讯云申请证书，阿里云做DNS验证
+  # - domain: "api.example.com"
+  #   cert_provider: "tencent"
+  #   dns_provider: "aliyun"
+  #   renew_days: 7
+
+  # 示例4: 混合模式 - 阿里云申请证书，腾讯云做DNS验证
+  # - domain: "app.example.com"
+  #   cert_provider: "aliyun"
+  #   dns_provider: "tencent"
+  #   renew_days: 7
+
+# ============================================
+# 全局配置
+# ============================================
+
+# 证书下载目录
+output_dir: "./certs"
+
+# 检查间隔（小时），用于守护进程模式
+check_interval: 24
+
+# 全局的证书下载后执行的命令（可选）
+# 支持的变量:
+#   ${DOMAIN}         - 域名
+#   ${CERT_DIR}       - 证书目录
+#   ${CERT_FILE}      - 证书文件路径
+#   ${KEY_FILE}       - 私钥文件路径
+#   ${FULLCHAIN_FILE} - 完整证书链文件路径
+# post_command: "systemctl reload nginx"
+
+# ============================================
+# 向后兼容：旧版阿里云配置格式 (仍然支持)
+# ============================================
+# aliyun:
+#   access_key_id: "your_access_key_id"
+#   access_key_secret: "your_access_key_secret"
+#   region: "cn-hangzhou"

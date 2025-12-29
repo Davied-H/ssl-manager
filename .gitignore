@@ -1,0 +1,25 @@
+# 配置文件（包含敏感信息）
+config.yaml
+
+# 证书目录
+certs/
+
+# 编译输出
+aliyun-ssl-manager
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
+
+# 日志文件
+*.log
+
+# 临时文件
+*.tmp
+*.bak
