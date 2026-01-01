@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"ssl-manager/internal/config"
@@ -34,14 +35,82 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 // Run 运行证书管理
 func (m *Manager) Run(ctx context.Context) error {
 	log.Println("========== 开始检查证书 ==========")
-
-	for _, domainCfg := range m.config.Domains {
-		if err := m.ProcessDomain(ctx, domainCfg); err != nil {
-			log.Printf("处理域名 %s 失败: %v", domainCfg.Domain, err)
-		}
+	
+	concurrency := m.config.Concurrency
+	if concurrency <= 0 {
+		concurrency = 1
 	}
+	
+	totalDomains := len(m.config.Domains)
+	log.Printf("共 %d 个域名需要处理，并发数: %d", totalDomains, concurrency)
+	
+	// 如果只有一个域名或并发数为1，使用串行处理
+	if totalDomains == 1 || concurrency == 1 {
+		for _, domainCfg := range m.config.Domains {
+			if err := m.ProcessDomain(ctx, domainCfg); err != nil {
+				log.Printf("处理域名 %s 失败: %v", domainCfg.Domain, err)
+			}
+		}
+		log.Println("========== 检查完成 ==========")
+		return nil
+	}
+	
+	// 并发处理
+	return m.runConcurrent(ctx, concurrency)
+}
 
-	log.Println("========== 检查完成 ==========")
+// runConcurrent 并发处理域名
+func (m *Manager) runConcurrent(ctx context.Context, concurrency int) error {
+	// 创建任务通道
+	domainChan := make(chan config.DomainConfig, len(m.config.Domains))
+	
+	// 将所有域名放入通道
+	for _, domainCfg := range m.config.Domains {
+		domainChan <- domainCfg
+	}
+	close(domainChan)
+	
+	// 使用 WaitGroup 等待所有 goroutine 完成
+	var wg sync.WaitGroup
+	var mu sync.Mutex // 保护日志输出
+	successCount := 0
+	failCount := 0
+	
+	// 启动 worker goroutines
+	for i := 0; i < concurrency; i++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			
+			for domainCfg := range domainChan {
+				domain := domainCfg.Domain
+				logPrefix := fmt.Sprintf("[Worker-%d][%s]", workerID, domain)
+				
+				mu.Lock()
+				log.Printf("%s 开始处理...", logPrefix)
+				mu.Unlock()
+				
+				err := m.ProcessDomain(ctx, domainCfg)
+				
+				mu.Lock()
+				if err != nil {
+					log.Printf("%s 处理失败: %v", logPrefix, err)
+					failCount++
+				} else {
+					log.Printf("%s 处理成功", logPrefix)
+					successCount++
+				}
+				mu.Unlock()
+			}
+		}(i + 1)
+	}
+	
+	// 等待所有 worker 完成
+	wg.Wait()
+	
+	log.Printf("========== 检查完成 ==========")
+	log.Printf("成功: %d 个域名, 失败: %d 个域名", successCount, failCount)
+	
 	return nil
 }
 

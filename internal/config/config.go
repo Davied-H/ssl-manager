@@ -12,6 +12,7 @@ type Config struct {
 	OutputDir     string `yaml:"output_dir"`
 	CheckInterval int    `yaml:"check_interval"` // 检查间隔（小时）
 	PostCommand   string `yaml:"post_command"`   // 全局后置命令
+	Concurrency   int    `yaml:"concurrency"`    // 并发处理数，默认1
 
 	// 向后兼容：旧版阿里云配置
 	Aliyun *AliyunConfig `yaml:"aliyun,omitempty"`

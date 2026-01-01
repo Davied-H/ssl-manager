@@ -31,6 +31,9 @@ func Load(path string) (*Config, error) {
 	if config.CheckInterval == 0 {
 		config.CheckInterval = 24
 	}
+	if config.Concurrency <= 0 {
+		config.Concurrency = 1 // 默认并发数为1，保持向后兼容
+	}
 
 	// 验证配置
 	if err := validate(&config); err != nil {
