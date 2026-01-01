@@ -14,6 +14,9 @@ type Config struct {
 	PostCommand   string `yaml:"post_command"`   // 全局后置命令
 	Concurrency   int    `yaml:"concurrency"`    // 并发处理数，默认1
 
+	// Webhook 通知配置
+	Webhook *WebhookConfig `yaml:"webhook,omitempty"`
+
 	// 向后兼容：旧版阿里云配置
 	Aliyun *AliyunConfig `yaml:"aliyun,omitempty"`
 }
@@ -82,4 +85,15 @@ func (d *DomainConfig) GetDNSProvider() string {
 		return d.Provider
 	}
 	return "aliyun" // 默认使用阿里云
+}
+
+// WebhookConfig Webhook 通知配置
+type WebhookConfig struct {
+	Enabled bool              `yaml:"enabled"` // 是否启用
+	URL     string            `yaml:"url"`     // Webhook URL
+	Headers map[string]string `yaml:"headers,omitempty"` // 自定义请求头
+	Events  []string          `yaml:"events,omitempty"`  // 订阅的事件类型
+	Timeout int               `yaml:"timeout,omitempty"` // 请求超时时间（秒），默认30
+	Retries int               `yaml:"retries,omitempty"` // 重试次数，默认3
+	BodyTemplate string       `yaml:"body_template,omitempty"` // 请求体模板（JSON格式）
 }

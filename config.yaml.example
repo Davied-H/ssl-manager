@@ -74,6 +74,35 @@ concurrency: 1
 # post_command: "systemctl reload nginx"
 
 # ============================================
+# Webhook 通知配置
+# ============================================
+# webhook:
+#   enabled: true
+#   url: "https://hooks.example.com/notify"
+#   headers:
+#     Authorization: "Bearer xxx"
+#     Content-Type: "application/json"
+#   events:
+#     - cert_expiring    # 证书即将过期
+#     - cert_renewed    # 证书申请/续期成功
+#     - cert_failed     # 证书申请失败
+#     - dns_timeout     # DNS 验证超时
+#   timeout: 30         # 请求超时时间（秒），默认30
+#   retries: 3          # 重试次数，默认3
+#   # 自定义请求体模板（可选，使用 Go template 语法）
+#   # 如果不配置，将使用默认 JSON 格式
+#   # 可用变量: .Event, .Domain, .Timestamp, .Message, .Data
+#   # 可用函数: toJson (将对象转换为 JSON 字符串)
+#   body_template: |
+#     {
+#       "event": "{{.Event}}",
+#       "domain": "{{.Domain}}",
+#       "timestamp": "{{.Timestamp}}",
+#       "message": "{{.Message}}",
+#       "data": {{.Data | toJson}}
+#     }
+
+# ============================================
 # 向后兼容：旧版阿里云配置格式 (仍然支持)
 # ============================================
 # aliyun:

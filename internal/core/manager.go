@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"ssl-manager/internal/config"
+	"ssl-manager/internal/notification"
 	"ssl-manager/internal/provider"
 	"ssl-manager/internal/storage"
 )
@@ -19,6 +20,7 @@ type Manager struct {
 	storage   *storage.FileStorage
 	validator *Validator
 	executor  *Executor
+	notifier  *notification.WebhookNotifier
 }
 
 // NewManager 创建管理器
@@ -29,6 +31,7 @@ func NewManager(cfg *config.Config) (*Manager, error) {
 		storage:   storage.NewFileStorage(cfg.OutputDir),
 		validator: NewValidator(),
 		executor:  NewExecutor(),
+		notifier:  notification.NewWebhookNotifier(cfg.Webhook),
 	}, nil
 }
 
@@ -144,6 +147,11 @@ func (m *Manager) ProcessDomain(ctx context.Context, domainCfg config.DomainConf
 		daysRemaining := int(time.Until(existingCert.NotAfter).Hours() / 24)
 		log.Printf("找到有效证书！剩余有效期: %d 天，CertID: %s", daysRemaining, existingCert.CertID)
 
+		// 如果证书即将过期，发送通知
+		if daysRemaining <= renewDays && m.notifier != nil {
+			m.notifier.NotifyCertExpiring(ctx, domain, daysRemaining)
+		}
+
 		// 下载已有证书
 		cert, err := certProvider.GetCertificateDetail(ctx, existingCert.CertID)
 		if err != nil {
@@ -174,27 +182,56 @@ func (m *Manager) ProcessDomain(ctx context.Context, domainCfg config.DomainConf
 
 		if !expiry.IsZero() {
 			log.Printf("线上证书将在 %s 过期，需要续期", expiry.Format("2006-01-02"))
+			// 发送证书即将过期通知
+			if m.notifier != nil {
+				daysRemaining := int(time.Until(expiry).Hours() / 24)
+				m.notifier.NotifyCertExpiring(ctx, domain, daysRemaining)
+			}
 		}
 
 		// 申请新证书
 		orderID, err := certProvider.ApplyCertificate(ctx, domain)
 		if err != nil {
+			// 发送证书申请失败通知
+			if m.notifier != nil {
+				m.notifier.NotifyCertFailed(ctx, domain, err.Error())
+			}
 			return fmt.Errorf("申请证书失败: %w", err)
 		}
 
 		// 等待DNS验证并下载证书
 		if err := m.waitForDNSValidation(ctx, certProvider, dnsProvider, domain, orderID); err != nil {
+			// 检查是否是超时错误
+			if err.Error() == fmt.Sprintf("等待超时，请检查云平台控制台，订单ID: %s", orderID) {
+				if m.notifier != nil {
+					m.notifier.NotifyDNSValidationTimeout(ctx, domain, orderID)
+				}
+			}
 			return fmt.Errorf("域名验证失败: %w", err)
 		}
 
 		// 下载证书
 		cert, err := certProvider.DownloadCertificate(ctx, orderID)
 		if err != nil {
+			// 发送证书申请失败通知
+			if m.notifier != nil {
+				m.notifier.NotifyCertFailed(ctx, domain, fmt.Sprintf("下载证书失败: %v", err))
+			}
 			return fmt.Errorf("下载证书失败: %w", err)
 		}
 
 		if err := m.storage.SaveCertificate(domain, cert); err != nil {
+			// 发送证书申请失败通知
+			if m.notifier != nil {
+				m.notifier.NotifyCertFailed(ctx, domain, fmt.Sprintf("保存证书失败: %v", err))
+			}
 			return fmt.Errorf("保存证书失败: %w", err)
+		}
+
+		// 发送证书申请成功通知
+		if m.notifier != nil {
+			// 使用 orderID 作为 certID（因为 Certificate 结构体没有 CertID 字段）
+			m.notifier.NotifyCertRenewed(ctx, domain, orderID)
 		}
 
 		certDownloaded = true
@@ -292,12 +329,21 @@ func (m *Manager) waitForDNSValidation(ctx context.Context, certProvider provide
 			return nil
 
 		case "failed":
+			// 发送证书申请失败通知
+			if m.notifier != nil {
+				m.notifier.NotifyCertFailed(ctx, domain, "证书申请失败，状态为 failed")
+			}
 			return fmt.Errorf("证书申请失败")
 
 		default:
 			log.Printf("当前状态: %s，继续等待...", status.Status)
 			time.Sleep(15 * time.Second)
 		}
+	}
+
+	// 发送 DNS 验证超时通知
+	if m.notifier != nil {
+		m.notifier.NotifyDNSValidationTimeout(ctx, domain, orderID)
 	}
 
 	return fmt.Errorf("等待超时，请检查云平台控制台，订单ID: %s", orderID)
@@ -331,24 +377,60 @@ func (m *Manager) ContinueOrder(ctx context.Context, orderID, domain, certProvid
 		log.Printf("证书已签发，开始下载...")
 		cert, err := certProvider.DownloadCertificate(ctx, orderID)
 		if err != nil {
+			// 发送证书申请失败通知
+			if m.notifier != nil {
+				m.notifier.NotifyCertFailed(ctx, domain, fmt.Sprintf("下载证书失败: %v", err))
+			}
 			return fmt.Errorf("下载证书失败: %w", err)
 		}
-		return m.storage.SaveCertificate(domain, cert)
+		if err := m.storage.SaveCertificate(domain, cert); err != nil {
+			// 发送证书申请失败通知
+			if m.notifier != nil {
+				m.notifier.NotifyCertFailed(ctx, domain, fmt.Sprintf("保存证书失败: %v", err))
+			}
+			return err
+		}
+		// 发送证书申请成功通知
+		if m.notifier != nil {
+			// 使用 orderID 作为 certID（因为 Certificate 结构体没有 CertID 字段）
+			m.notifier.NotifyCertRenewed(ctx, domain, orderID)
+		}
+		return nil
 	}
 
 	// 继续等待验证
 	if err := m.waitForDNSValidation(ctx, certProvider, dnsProvider, domain, orderID); err != nil {
+		// 检查是否是超时错误
+		if err.Error() == fmt.Sprintf("等待超时，请检查云平台控制台，订单ID: %s", orderID) {
+			if m.notifier != nil {
+				m.notifier.NotifyDNSValidationTimeout(ctx, domain, orderID)
+			}
+		}
 		return fmt.Errorf("域名验证失败: %w", err)
 	}
 
 	// 下载证书
 	cert, err := certProvider.DownloadCertificate(ctx, orderID)
 	if err != nil {
+		// 发送证书申请失败通知
+		if m.notifier != nil {
+			m.notifier.NotifyCertFailed(ctx, domain, fmt.Sprintf("下载证书失败: %v", err))
+		}
 		return fmt.Errorf("下载证书失败: %w", err)
 	}
 
 	if err := m.storage.SaveCertificate(domain, cert); err != nil {
+		// 发送证书申请失败通知
+		if m.notifier != nil {
+			m.notifier.NotifyCertFailed(ctx, domain, fmt.Sprintf("保存证书失败: %v", err))
+		}
 		return fmt.Errorf("保存证书失败: %w", err)
+	}
+
+	// 发送证书申请成功通知
+	if m.notifier != nil {
+		// 使用 orderID 作为 certID（因为 Certificate 结构体没有 CertID 字段）
+		m.notifier.NotifyCertRenewed(ctx, domain, orderID)
 	}
 
 	log.Printf("订单 %s 处理完成！", orderID)
