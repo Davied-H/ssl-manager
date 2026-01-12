@@ -668,6 +668,193 @@
             line-height: 1.7;
         }
 
+        /* ===== Pricing ===== */
+        .pricing {
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--primary-light) 50%, var(--bg-dark) 100%);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            position: relative;
+            padding: 40px 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            transition: all var(--transition-slow);
+            overflow: hidden;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+        }
+
+        .pricing-card.featured::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 2px;
+            background: var(--gradient-primary);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+        }
+
+        .pricing-card.featured:hover {
+            box-shadow: 0 20px 40px -20px var(--accent-glow);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 6px 12px;
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .pricing-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .pricing-card.featured .pricing-icon {
+            background: var(--gradient-primary);
+        }
+
+        .pricing-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .pricing-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .pricing-price {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 24px 0;
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .pricing-amount {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .pricing-amount .currency {
+            font-size: 1.5rem;
+            vertical-align: super;
+            margin-right: 4px;
+        }
+
+        .pricing-period {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 8px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 32px;
+        }
+
+        .pricing-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-features .feature-check {
+            color: var(--accent);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .pricing-cta {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            text-align: center;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all var(--transition-normal);
+        }
+
+        .pricing-cta.primary {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .pricing-cta.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px -10px var(--accent-glow);
+        }
+
+        .pricing-cta.secondary {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .pricing-cta.secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+        }
+
+        .pricing-note {
+            text-align: center;
+            margin-top: 48px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .pricing-note a {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
         /* ===== Platforms ===== */
         .platforms-grid {
             display: grid;
@@ -1157,6 +1344,7 @@
             </a>
             <nav class="nav-links" id="nav-links">
                 <a href="#features">功能</a>
+                <a href="#pricing">价格</a>
                 <a href="#platforms">平台</a>
                 <a href="#quickstart">快速开始</a>
                 <a href="https://github.com/Davied-H/ssl-manager" target="_blank" class="nav-github">
@@ -1264,6 +1452,69 @@
                     <p>证书更新后自动执行自定义命令，如重载 Nginx、同步到其他服务器、发送通知等</p>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section pricing" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">灵活定价</span>
+                <h2 class="section-title">选择适合您的方案</h2>
+                <p class="section-desc">开源免费使用，企业订阅享受专属支持服务</p>
+            </div>
+            <div class="pricing-grid">
+                <!-- 免费版 -->
+                <div class="pricing-card animate-on-scroll">
+                    <div class="pricing-header">
+                        <div class="pricing-icon">&#128274;</div>
+                        <h3>开源版</h3>
+                        <p>适合个人开发者和小型项目</p>
+                    </div>
+                    <div class="pricing-price">
+                        <div class="pricing-amount">免费</div>
+                        <div class="pricing-period">永久免费，开源社区支持</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><span class="feature-check">&#10003;</span> 多云平台证书管理</li>
+                        <li><span class="feature-check">&#10003;</span> 自动申请与续期</li>
+                        <li><span class="feature-check">&#10003;</span> DNS 自动验证</li>
+                        <li><span class="feature-check">&#10003;</span> 守护进程模式</li>
+                        <li><span class="feature-check">&#10003;</span> GitHub Issues 社区支持</li>
+                    </ul>
+                    <a href="https://github.com/Davied-H/ssl-manager" target="_blank" class="pricing-cta secondary">
+                        开始使用
+                    </a>
+                </div>
+
+                <!-- 企业版 -->
+                <div class="pricing-card featured animate-on-scroll">
+                    <span class="pricing-badge">推荐</span>
+                    <div class="pricing-header">
+                        <div class="pricing-icon">&#127970;</div>
+                        <h3>企业订阅</h3>
+                        <p>适合企业级生产环境部署</p>
+                    </div>
+                    <div class="pricing-price">
+                        <div class="pricing-amount"><span class="currency">¥</span>2000</div>
+                        <div class="pricing-period">每年 / 不限域名数量</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><span class="feature-check">&#10003;</span> 开源版全部功能</li>
+                        <li><span class="feature-check">&#10003;</span> 优先技术支持（工作日 24h 内响应）</li>
+                        <li><span class="feature-check">&#10003;</span> 专属企业微信/钉钉群支持</li>
+                        <li><span class="feature-check">&#10003;</span> 远程部署指导与问题排查</li>
+                        <li><span class="feature-check">&#10003;</span> 定制功能需求优先开发</li>
+                        <li><span class="feature-check">&#10003;</span> 发票支持（增值税普票/专票）</li>
+                    </ul>
+                    <a href="mailto:13331190665@163.com?subject=SSL Manager 企业订阅咨询" class="pricing-cta primary">
+                        联系我们
+                    </a>
+                </div>
+            </div>
+            <p class="pricing-note">
+                有特殊需求？<a href="mailto:13331190665@163.com">联系我们</a>获取定制化解决方案
+            </p>
         </div>
     </section>
 
