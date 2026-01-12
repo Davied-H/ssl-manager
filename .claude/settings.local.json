@@ -13,7 +13,25 @@
       "Bash(./build.sh:*)",
       "Bash(./dist/aliyun-ssl-manager-darwin-arm64:*)",
       "Bash(wc:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Skill(commit)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(./release.sh:*)",
+      "Bash(GOOS=windows GOARCH=amd64 go build:*)",
+      "Bash(git tag:*)",
+      "Bash(gh release:*)",
+      "Bash(dist/ssl-manager-linux-amd64:*)",
+      "Bash(dist/ssl-manager-linux-arm64:*)",
+      "Bash(dist/ssl-manager-darwin-amd64 )",
+      "Bash(dist/ssl-manager-darwin-arm64:*)",
+      "Bash(dist/checksums.sha256)",
+      "Bash(docker build:*)",
+      "Bash(.)",
+      "Bash(docker push:*)",
+      "Bash(docker login:*)",
+      "Bash(open:*)"
     ]
   }
 }
